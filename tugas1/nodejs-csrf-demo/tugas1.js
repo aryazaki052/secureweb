@@ -38,7 +38,7 @@ app.use((err, req, res, next) => {
         // CSRF token tidak valid
         return res.status(403).send('Invalid CSRF token');
     }
-    next(err);
+    next(err);       
 });
 
 // Menjalankan server
