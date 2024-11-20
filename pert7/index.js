@@ -2,14 +2,17 @@ const express = require('express')
 const cookieParser = require('cookie-parser')
 const app = express()
 const port = 3000
+const csurf = require ('csurf');
+const csrfProtection = csurf({cookie: true});
 
 // Middleware untuk parsing data dari form HTML dan JSON
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(cookieParser())
 
+
 // Endpoint dasbor dengan otentikasi menggunakan cookie token
-app.get('/dasbor', (req, res) => {
+app.get('/dasbor',csrfProtection, (req, res) => {
   const token = req.cookies.token
 
   if (token === 'A001') {
@@ -20,13 +23,16 @@ app.get('/dasbor', (req, res) => {
 })
 
 // Endpoint untuk menampilkan form transfer dengan validasi token
-app.get('/transfer', (req, res) => {
+app.get('/transfer', csrfProtection, (req, res) => {
   const token = req.cookies.token
   if (token === 'A001') {
     res.send(`
       <html>
         <body>
           <form method="POST" action="/transfer">
+          <br><br>
+          <input type="text" name="_csrf" value="${req.csrfToken()}">
+          <br><br>
             <label for="to">To (Account Number):</label>
             <input type="text" id="to" name="to" required>
             <br><br>

