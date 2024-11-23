@@ -43,7 +43,7 @@ app.get('/signup', (req, res) => {
     </head>
     <body>
       <h2>Signup Form</h2>
-      <form action="http://localhost:3002/signup" method="POST"> <!-- Perbaiki URL di sini -->
+      <form action="http://localhost:3002/signup" method="POST">
         <label>Email:</label>
         <input type="email" name="email" required><br>
         <label>Password:</label>
@@ -68,6 +68,27 @@ app.get('/signup', (req, res) => {
     </html>
   `);
 });
+
+// Halaman Member (Setelah Login)
+app.get('/member', (req, res) => {
+  const userName = req.query.userName || 'Member'; // Dapatkan nama pengguna dari query string, default 'Member'
+
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Member</title>
+    </head>
+    <body>
+      <h2>Selamat datang, ${userName}!</h2>
+      <p>Anda berhasil login dan kini berada di halaman member.</p>
+    </body>
+    </html>
+  `);
+});
+
 
 // Menjalankan server
 app.listen(port, () => {
