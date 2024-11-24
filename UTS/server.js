@@ -20,7 +20,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 // Setup CSRF protection
-const csrfProtection = csurf({ cookie: true });
+const csrfProtection = csurf({
+  cookie: {
+    httpOnly: true, // Hanya dapat diakses oleh server
+    secure: false,  // Ubah ke true jika menggunakan HTTPS
+    sameSite: 'Strict', // Lindungi dari serangan lintas situs
+  },
+});
+
 
 // Initialize SQLite Database
 const db = new sqlite3.Database('./users.db', (err) => {
