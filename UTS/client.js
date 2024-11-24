@@ -79,6 +79,65 @@ app.get('/signup', csrfProtection, (req, res) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Sign Up</title>
+      <script>
+        function validateForm(event) {
+          event.preventDefault(); // Mencegah pengiriman form jika tidak valid
+
+          const email = document.forms["signupForm"]["email"].value;
+          const password = document.forms["signupForm"]["password"].value;
+          const nama = document.forms["signupForm"]["nama"].value;
+          const nomor_hp = document.forms["signupForm"]["nomor_hp"].value;
+          const alamat_web = document.forms["signupForm"]["alamat_web"].value;
+          const tempat_lahir = document.forms["signupForm"]["tempat_lahir"].value;
+          const tanggal_lahir = document.forms["signupForm"]["tanggal_lahir"].value;
+          const no_kk = document.forms["signupForm"]["no_kk"].value;
+          const no_ktp = document.forms["signupForm"]["no_ktp"].value;
+
+          const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+          const urlRegex = /^(https?:\\/\\/)?(www\\.)?[^\\s$.?#].[^\\s]*$/;
+          const phoneRegex = /^\\d+$/;
+
+          if (!emailRegex.test(email)) {
+            alert("Email harus berformat email yang valid.");
+            return false;
+          }
+          if (password.length < 6) {
+            alert("Password harus minimal 6 karakter.");
+            return false;
+          }
+          if (nama.length < 3) {
+            alert("Nama harus minimal 3 karakter.");
+            return false;
+          }
+          if (!phoneRegex.test(nomor_hp)) {
+            alert("Nomor HP harus berbentuk angka.");
+            return false;
+          }
+          if (!urlRegex.test(alamat_web)) {
+            alert("Alamat web harus berbentuk URL yang valid.");
+            return false;
+          }
+          if (tempat_lahir.length < 3) {
+            alert("Tempat lahir harus minimal 3 karakter.");
+            return false;
+          }
+          if (tanggal_lahir.length < 3) {
+            alert("Tanggal lahir harus minimal 3 karakter.");
+            return false;
+          }
+          if (no_kk.length !== 16 || !phoneRegex.test(no_kk)) {
+            alert("No. KK harus 16 karakter dan berupa angka.");
+            return false;
+          }
+          if (no_ktp.length !== 16 || !phoneRegex.test(no_ktp)) {
+            alert("No. KTP harus 16 karakter dan berupa angka.");
+            return false;
+          }
+
+          // Jika semua validasi lolos, submit form
+          document.forms["signupForm"].submit();
+        }
+      </script>
     </head>
     <body>
       <h2>Signup Form</h2>
@@ -107,29 +166,14 @@ app.get('/signup', csrfProtection, (req, res) => {
     </body>
     </html>
   `);
+
 });
 
 
 
 // Halaman Member (Setelah Login)
-app.get('/member', (req, res) => {z
-  const userName = req.query.userName || 'Member'; // Dapatkan nama pengguna dari query string, default 'Member'
 
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Member</title>
-    </head>
-    <body>
-      <h2>Selamat datang, ${userName}!</h2>
-      <p>Anda berhasil login dan kini berada di halaman member.</p>
-    </body>
-    </html>
-  `);
-});
+
 
 // Menjalankan server
 app.listen(port, () => {
