@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios'); // Import axios to handle HTTP requests
 const csrf = require('csurf');
 const cookieParser = require('cookie-parser');
+const Joi = require('joi');  // Import Joi untuk validasi dan sanitasi
 
 const app = express();
 const port = 3001;
@@ -108,8 +109,10 @@ app.get('/signup', csrfProtection, (req, res) => {
   `);
 });
 
+
+
 // Halaman Member (Setelah Login)
-app.get('/member', (req, res) => {
+app.get('/member', (req, res) => {z
   const userName = req.query.userName || 'Member'; // Dapatkan nama pengguna dari query string, default 'Member'
 
   res.send(`

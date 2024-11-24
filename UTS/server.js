@@ -4,6 +4,7 @@ const cors = require('cors');
 const xss = require('xss');
 const cookieParser = require('cookie-parser');
 const csurf = require('csurf');
+const Joi = require('joi');  // Import Joi untuk validasi dan sanitasi
 
 const app = express();
 const port = 3003;
@@ -60,23 +61,39 @@ db.serialize(() => {
 
 // Endpoint: Signup
 app.post('/signup', csrfProtection, (req, res) => {
+  const schema = Joi.object({
+    email: Joi.string().email().required().trim(),
+    password: Joi.string().min(6).required().trim(),
+    nama: Joi.string().min(3).required().trim(),
+    nomor_hp: Joi.string().min(10).max(15).required().trim(),
+    alamat_web: Joi.string().uri().optional().trim(),
+    tempat_lahir: Joi.string().min(3).required().trim(),
+    tanggal_lahir: Joi.date().iso().required(),
+    no_kk: Joi.string().length(16).required().trim(),
+    no_ktp: Joi.string().length(16).required().trim()
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ message: 'Validation failed', error: error.details });
+  }
+
+  // Sanitasi data setelah validasi
   const sanitizedData = {
-    email: xss(req.body.email),
-    password: xss(req.body.password),
-    nama: xss(req.body.nama),
-    nomor_hp: xss(req.body.nomor_hp),
-    alamat_web: xss(req.body.alamat_web),
-    tempat_lahir: xss(req.body.tempat_lahir),
-    tanggal_lahir: xss(req.body.tanggal_lahir),
-    no_kk: xss(req.body.no_kk),
-    no_ktp: xss(req.body.no_ktp)
+    email: xss(value.email.trim().toLowerCase()),  // Email diubah menjadi lowercase dan sanitasi
+    password: xss(value.password),  // Sanitasi password jika diperlukan (biasanya tidak perlu sanitasi untuk password)
+    nama: xss(value.nama),  // Sanitasi nama
+    nomor_hp: xss(value.nomor_hp.trim()),  // Sanitasi nomor HP
+    alamat_web: value.alamat_web ? xss(value.alamat_web) : '',  // Sanitasi alamat web jika ada
+    tempat_lahir: xss(value.tempat_lahir),  // Sanitasi tempat lahir
+    tanggal_lahir: value.tanggal_lahir,
+    no_kk: xss(value.no_kk.trim()),  // Sanitasi no KK
+    no_ktp: xss(value.no_ktp.trim())  // Sanitasi no KTP
   };
 
-  const sql = `
-    INSERT INTO users 
-    (email, password, nama, nomor_hp, alamat_web, tempat_lahir, tanggal_lahir, no_kk, no_ktp) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+  const sql = `INSERT INTO users (email, password, nama, nomor_hp, alamat_web, tempat_lahir, tanggal_lahir, no_kk, no_ktp) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   db.run(sql, Object.values(sanitizedData), (err) => {
     if (err) {
@@ -86,16 +103,24 @@ app.post('/signup', csrfProtection, (req, res) => {
   });
 });
 
-// Endpoint: Signin
+
 // Endpoint: Signin
 app.post('/signin', csrfProtection, (req, res) => {
-  const email = xss(req.body.email);
-  const password = xss(req.body.password);
+  // Skema validasi dan sanitasi dengan Joi
+  const schema = Joi.object({
+    email: Joi.string().email().required().trim(),
+    password: Joi.string().min(6).required().trim()
+  });
 
-  // Validasi input
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email dan password harus diisi' });
+  // Validasi data
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ message: 'Validation failed', error: error.details });
   }
+
+  const email = xss(value.email);
+  const password = xss(value.password);
 
   db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
     if (err) {
@@ -103,25 +128,22 @@ app.post('/signin', csrfProtection, (req, res) => {
       return res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 
-    // Periksa kecocokan email dan password
     if (!row || row.password !== password) {
       console.warn('Login attempt failed. Email or password incorrect.');
       return res.status(400).json({ message: 'Email atau password salah' });
     }
 
-    // Token CSRF sudah diverifikasi oleh middleware
-    const csrfToken = req.csrfToken(); // Token baru jika diperlukan
+    const csrfToken = req.csrfToken();
 
     console.log('CSRF Token dari klien telah divalidasi.');
     console.log('Detail user:', { id: row.id, nama: row.nama, email: row.email });
 
-    // Set cookie sesi pengguna
     res.cookie('user_id', row.id, { httpOnly: true, secure: false, sameSite: 'Strict' });
 
-    // Redirect ke halaman member
     res.redirect(`http://localhost:3001/member?userName=${encodeURIComponent(row.nama)}&csrfToken=${csrfToken}`);
   });
 });
+
 
 
 
