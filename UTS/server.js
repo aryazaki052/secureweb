@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const csurf = require('csurf');
 
 const app = express();
-const port = 3002;
+const port = 3003;
 
 // Enable CORS with credentials
 app.use(cors({
@@ -80,58 +80,48 @@ app.post('/signup', csrfProtection, (req, res) => {
 });
 
 // Endpoint: Signin
+// Endpoint: Signin
 app.post('/signin', csrfProtection, (req, res) => {
   const email = xss(req.body.email);
   const password = xss(req.body.password);
 
-  // Log untuk melihat token yang diterima dan token yang dihasilkan oleh server
-  console.log('Token received in POST body:', req.body._csrf); // Token yang dikirim dari client
-  console.log('Token expected by server:', req.csrfToken());   // Token yang dihasilkan oleh server
-
-  // Validasi token CSRF
-  if (req.body._csrf !== req.csrfToken()) {
-    return res.status(403).json({ message: 'Invalid CSRF token' });
-  }
-
+  // Validasi input
   if (!email || !password) {
     return res.status(400).json({ message: 'Email dan password harus diisi' });
   }
 
   db.get('SELECT * FROM users WHERE email = ?', [email], (err, row) => {
     if (err) {
+      console.error('Database error:', err.message);
       return res.status(500).json({ message: 'Internal server error', error: err.message });
     }
 
+    // Periksa kecocokan email dan password
     if (!row || row.password !== password) {
+      console.warn('Login attempt failed. Email or password incorrect.');
       return res.status(400).json({ message: 'Email atau password salah' });
     }
 
-    // Generate CSRF token untuk sesi berikutnya
-    const csrfToken = req.csrfToken();
+    // Token CSRF sudah diverifikasi oleh middleware
+    const csrfToken = req.csrfToken(); // Token baru jika diperlukan
 
-    // Set cookie untuk sesi pengguna
+    console.log('CSRF Token dari klien telah divalidasi.');
+    console.log('Detail user:', { id: row.id, nama: row.nama, email: row.email });
+
+    // Set cookie sesi pengguna
     res.cookie('user_id', row.id, { httpOnly: true, secure: false, sameSite: 'Strict' });
 
-    // Redirect ke halaman member client dengan membawa CSRF token
-    // res.redirect(`http://localhost:3001/member?userName=${encodeURIComponent(row.nama)}&csrfToken=${csrfToken}`);
+    // Redirect ke halaman member
+    res.redirect(`http://localhost:3001/member?userName=${encodeURIComponent(row.nama)}&csrfToken=${csrfToken}`);
   });
 });
 
 
+
 app.get('/csrf-token', csrfProtection, (req, res) => {
-  const csrfToken = req.csrfToken(); // Generate CSRF token
-
-  console.log('Generated CSRF Token:', csrfToken); // Debug log
-
-  // Set token as a cookie
-  res.cookie('XSRF-TOKEN', csrfToken, {
-    httpOnly: false,
-    secure: false,
-    sameSite: 'Lax',
-  });
-
-  // Kirim token juga dalam respons JSON
-  res.json({ csrfToken });
+  const csrfToken = req.csrfToken();
+  res.cookie('XSRF-TOKEN', csrfToken, { httpOnly: false, secure: false }); // Cookie untuk client
+  res.json({ csrfToken }); // Respons JSON untuk validasi manual
 });
 
 

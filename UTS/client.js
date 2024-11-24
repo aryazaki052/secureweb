@@ -15,16 +15,14 @@ const csrfProtection = csrf({ cookie: true });
 
 // Halaman Login (Sign In)
 app.get('/', async (req, res) => {
-  const message = req.query.message || ''; // Mendapatkan pesan dari query string
+  const message = req.query.message || ''; // Pesan dari query string
 
   try {
     // Ambil CSRF token dari server
-    const csrfResponse = await axios.get('http://localhost:3002/csrf-token', {
+    const csrfResponse = await axios.get('http://localhost:3003/csrf-token', {
       withCredentials: true // Pastikan cookie diterima
     });
-    const csrfToken = csrfResponse.data.csrfToken;
-
-    console.log('CSRF Token from client:', csrfToken); // Debug token
+    const csrfToken = csrfResponse.data.csrfToken; // Ambil token dari respons server
 
     res.send(`
       <!DOCTYPE html>
@@ -37,8 +35,8 @@ app.get('/', async (req, res) => {
       <body>
         <h2>Login Form</h2>
         ${message ? `<p>${message}</p>` : ''} <!-- Menampilkan pesan jika ada -->
-        <form action="http://localhost:3002/signin" method="POST">
-          <input type="hidden" name="_csrf" value="${csrfToken}">  <!-- CSRF Token -->
+        <form action="http://localhost:3003/signin" method="POST">
+          <input type="hidden" name="_csrf" value="${csrfToken}"> <!-- CSRF Token -->
           <label>Email:</label>
           <input type="email" name="email" required><br>
           <label>Password:</label>
@@ -57,6 +55,8 @@ app.get('/', async (req, res) => {
 
 
 
+
+
 // Halaman Sign Up
 app.get('/signup', csrfProtection, (req, res) => {
   const csrfToken = req.csrfToken();  // Generate CSRF token
@@ -71,7 +71,7 @@ app.get('/signup', csrfProtection, (req, res) => {
     </head>
     <body>
       <h2>Signup Form</h2>
-      <form action="http://localhost:3002/signup" method="POST">
+      <form action="http://localhost:3003/signup" method="POST">
         <input type="hidden" name="_csrf" value="${csrfToken}">  <!-- CSRF Token -->
         <label>Email:</label>
         <input type="email" name="email" required><br>
