@@ -1,5 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2');
+const cors = require('cors');
 
 const app = express(); 
 const db = mysql.createConnection({
@@ -10,37 +11,46 @@ const db = mysql.createConnection({
 });
 
 // Middleware untuk menangani JSON
+app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Untuk menangani data dari form
 
 
 // home
-app.post('/', (req, res) => {
-  const query = `SELECT * FROM product`;
+app.get('/product', (req, res) => {
+  const query = 'SELECT * FROM product';
 
   db.query(query, (err, result) => {
+    // Tidak perlu prepare statement karena tidak ada input dari pengguna
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ status: 'terjadi error', error: err.message });
     }
 
+    // Jika data ditemukan
     if (result.length > 0) {
-      res.status(200).json({
+      return res.status(200).json({
         status: 'data berhasil ditampilkan',
         data: result
       });
     } else {
-      res.status(404).json({ status: 'tidak ada data' });
+      return res.status(404).json({ status: 'tidak ada data' });
     }
   });
 });
 
-// created
+
+
 app.post('/create', (req, res) => {
-  const { name, price } = req.body;
+  const { name, price } = req.body; // Pastikan req.body memiliki nilai
+  if (!name || !price) {
+    return res.status(400).json({ status: 'terjadi error', error: 'Name atau Price tidak boleh kosong' });
+  }
 
-  const query = `INSERT INTO product (name, price) VALUES ('${name}', ${price})`;
+  const query = 'INSERT INTO product (name, price) VALUES (?, ?)';
+  const values = [name, price];
 
-  db.query(query, (err, result) => {
+  db.query(query, values, (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ status: 'terjadi error', error: err.message });
@@ -54,12 +64,18 @@ app.post('/create', (req, res) => {
 
 // edit
 app.put('/edit/:id', (req, res) => {
-  const { id } = req.params; // Mengambil id dari parameter URL
-  const { name, price } = req.body; // Mengambil data baru dari body request
+  const id = req.params.id; // Ambil ID dari parameter URL
+  const { name, price } = req.body; // Ambil Name dan Price dari body permintaan
 
-  const query = `UPDATE product SET name = '${name}', price = ${price} WHERE id = ${id}`;
+  if (!name || !price || !id) {
+    return res.status(400).json({ status: 'terjadi error', error: 'ID, Name, atau Price tidak boleh kosong' });
+  }
 
-  db.query(query, (err, result) => {
+  // Bangun query SQL dengan menggunakan prepared statement
+  const query = 'UPDATE product SET name = ?, price = ? WHERE id = ?';
+  const values = [name, price, id];
+
+  db.query(query, values, (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ status: 'terjadi error', error: err.message });
@@ -74,13 +90,19 @@ app.put('/edit/:id', (req, res) => {
 });
 
 
+
+
+
+
 // delete
+
 app.delete('/delete/:id', (req, res) => {
   const { id } = req.params; // Mengambil id dari parameter URL
 
-  const query = `DELETE FROM product WHERE id = ${id}`;
+  const query = 'DELETE FROM product WHERE id = ?';
+  const values = [id];
 
-  db.query(query, (err, result) => {
+  db.query(query, values, (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ status: 'terjadi error', error: err.message });
@@ -93,7 +115,6 @@ app.delete('/delete/:id', (req, res) => {
     }
   });
 });
-
 
 
 // Server mulai mendengarkan
